@@ -7,8 +7,10 @@ import (
 	"net/http/cookiejar"
 	"net/rpc"
 	"net/url"
+	"time"
 )
 
+// Client is rpc.Client
 type Client struct {
 	*rpc.Client
 }
@@ -99,7 +101,8 @@ func (codec *clientCodec) ReadResponseBody(v interface{}) (err error) {
 		return nil
 	}
 
-	if err = codec.response.Unmarshal(v); err != nil {
+	err = codec.response.Unmarshal(v)
+	if err != nil {
 		return err
 	}
 
@@ -113,12 +116,15 @@ func (codec *clientCodec) Close() error {
 }
 
 // NewClient returns instance of rpc.Client object, that is used to send request to xmlrpc service.
-func NewClient(requrl string, transport http.RoundTripper) (*Client, error) {
+func NewClient(requrl string, transport http.RoundTripper, timeout time.Duration) (*Client, error) {
 	if transport == nil {
 		transport = http.DefaultTransport
 	}
 
-	httpClient := &http.Client{Transport: transport}
+	httpClient := &http.Client{
+		Transport: transport,
+		Timeout:   timeout,
+	}
 
 	jar, err := cookiejar.New(nil)
 
